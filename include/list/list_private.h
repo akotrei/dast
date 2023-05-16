@@ -21,6 +21,7 @@ typedef struct _dast_list_t
 
     void* (*copy_f)(void* obj, void* memory);
     void (*del_f)(void* obj);
+	int (*cmp_f)(void *o1, void *o2);
 } _dast_list_t;
 
 #endif /* __DAST_LIST_PRIVATE_H__ */
