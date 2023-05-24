@@ -71,12 +71,12 @@ clean:
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #		lib
-OBJ_ALL: ALLOCATOR_OBJ_BUILD TREE_OBJ_BUILD
+OBJ_ALL: ALLOCATOR_OBJ_BUILD TREE_OBJ_BUILD LIST_OBJ_BUILD
 LIB_BUILD: OBJ_ALL
 ifeq '$(BUILD_TYPE)' 'shared'
 	$(COMPILER) $(CFLAGS) $(CLIBFLAGS) -o $(BUILD_DIR)/lib$(LIBNAME).so $(OBJ_ALL)
 else ifeq '$(BUILD_TYPE)' 'static'
-	ar rc $(BUILD_DIR)/lib$(LIBNAME).a $(ALLOCATOR_OBJ) $(TREE_OBJ)
+	ar rc $(BUILD_DIR)/lib$(LIBNAME).a $(ALLOCATOR_OBJ) $(TREE_OBJ) $(LIST_OBJ)
 	ranlib $(BUILD_DIR)/lib$(LIBNAME).a
 else
 $(error you must use 'shared' or 'static' for BUILD_TYPE flag)
@@ -101,6 +101,17 @@ TREE_C = $(wildcard $(SRC_DIR)/tree/*.c)
 TREE_OBJ = $(subst $(SRC_DIR)/tree/,$(BUILD_DIR)/,$(subst .c,.o,$(TREE_C)))
 TREE_OBJ_BUILD: $(TREE_OBJ)
 $(TREE_OBJ): $(BUILD_DIR)/%.o: $(SRC_DIR)/tree/%.c $(TREE_H)
+	$(COMPILER) $(CFLAGS) $(COBJFLAGS) $(IFLAGS) -c $< -o $@
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#		list
+LIST_H = $(wildcard $(INCLUDE_DIR)/list/*.h) $(INCLUDE_DIR)/interface/iallocator.h\
+$(INCLUDE_DIR)/interface/iiterator.h
+LIST_C = $(wildcard $(SRC_DIR)/list/*.c)
+LIST_OBJ = $(subst $(SRC_DIR)/list/,$(BUILD_DIR)/,$(subst .c,.o,$(LIST_C)))
+LIST_OBJ_BUILD: $(LIST_OBJ)
+$(LIST_OBJ): $(BUILD_DIR)/%.o: $(SRC_DIR)/list/%.c $(LIST_H)
 	$(COMPILER) $(CFLAGS) $(COBJFLAGS) $(IFLAGS) -c $< -o $@
 
 
@@ -137,4 +148,16 @@ $(DEV_TREE_OBJ): $(DEV_TREE_C) $(TREE_C) $(TREE_H)
 	$(COMPILER) $(CFLAGS) $(IFLAGS) -c $(DEV_TREE_C) -o $(DEV_TREE_OBJ)
 $(DEV_TREE_EXE): $(DEV_TREE_OBJ)
 	$(COMPILER) $(CFLAGS) -o $(DEV_TREE_EXE) $(DEV_TREE_OBJ) \
+	$(LFLAGS) -l$(LIBNAME)
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#		dev/test_list.c
+DEV_LIST_C = $(DEV_DIR)/test_list.c
+DEV_LIST_OBJ = $(BUILD_DIR)/test_list.o
+DEV_LIST_EXE = $(BUILD_DIR)/test_list
+DEV_LIST: $(DEV_LIST_EXE)
+$(DEV_LIST_OBJ): $(DEV_LIST_C) $(LIST_C) $(LIST_H)
+	$(COMPILER) $(CFLAGS) $(IFLAGS) -c $(DEV_LIST_C) -o $(DEV_LIST_OBJ)
+$(DEV_LIST_EXE): $(DEV_LIST_OBJ)
+	$(COMPILER) $(CFLAGS) -o $(DEV_LIST_EXE) $(DEV_LIST_OBJ) \
 	$(LFLAGS) -l$(LIBNAME)
